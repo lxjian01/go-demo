@@ -1,0 +1,22 @@
+version: "1.0.0"
+env: "dev"
+httpd:
+  host: "0.0.0.0"
+  port: 8010
+logger:
+  dir: "/Users/lj/logs/go-demo"
+  Level: "INFO"
+mysql:
+  host: "localhost"
+  port: 3306
+  dbName: "go-demo"
+  user: "root"
+  password: "123456"
+  maxConn: 30
+  maxOpen: 30
+redis:
+  host: "localhost"
+  port: 6379
+  Password: ""
+  db: 0
+  
