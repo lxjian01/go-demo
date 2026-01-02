@@ -9,9 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type Response struct{}
-
-func (resp *Response) getErrorMsg(err interface{}) string {
+func responseGetErrorMsg(err interface{}) string {
 	errorMsg := ""
 	switch v := err.(type) {
 	case error:
@@ -24,7 +22,7 @@ func (resp *Response) getErrorMsg(err interface{}) string {
 	return errorMsg
 }
 
-func (resp *Response) ToSuccess(c *gin.Context, data interface{}) {
+func ResponseSuccess(c *gin.Context, data interface{}) {
 	if data == nil {
 		c.JSON(200, gin.H{})
 	} else {
@@ -32,13 +30,13 @@ func (resp *Response) ToSuccess(c *gin.Context, data interface{}) {
 	}
 }
 
-func (resp *Response) ToBadRequest(c *gin.Context, httpCode int, errorCode int, err interface{}, errorData interface{}) {
-	errorMsg := resp.getErrorMsg(err)
+func ResponseBadRequest(c *gin.Context, httpCode int, errorCode int, err interface{}, errorData interface{}) {
+	errorMsg := responseGetErrorMsg(err)
 	data := gin.H{"errorCode": errorCode, "errorMsg": errorMsg, "errorData": errorData}
 	c.JSON(httpCode, data)
 }
 
-func (resp *Response) ToErrorValidatorParameter(c *gin.Context, err error) {
+func ResponseErrorValidatorParameter(c *gin.Context, err error) {
 	var errorMsg string
 	errorData := make(map[string]string)
 	switch errs := err.(type) {
@@ -60,29 +58,29 @@ func (resp *Response) ToErrorValidatorParameter(c *gin.Context, err error) {
 	default:
 		errorMsg = err.Error()
 	}
-	resp.ToBadRequest(c, 400, 54000, errorMsg, errorData)
+	ResponseBadRequest(c, 400, 54000, errorMsg, errorData)
 }
 
-func (resp *Response) ToErrorParameter(c *gin.Context, err interface{}) {
-	resp.ToBadRequest(c, 400, 54000, err, nil)
+func ResponseErrorParameter(c *gin.Context, err interface{}) {
+	ResponseBadRequest(c, 400, 54000, err, nil)
 }
 
-func (resp *Response) ToMsgUnauthorized(c *gin.Context, err interface{}, errorData string) {
-	resp.ToBadRequest(c, 401, 54010, err, errorData)
+func ResponseMsgUnauthorized(c *gin.Context, err interface{}, errorData string) {
+	ResponseBadRequest(c, 401, 54010, err, errorData)
 }
 
-func (resp *Response) ToErrorForbidden(c *gin.Context, err interface{}, errorData string) {
-	resp.ToBadRequest(c, 403, 54030, err, errorData)
+func ResponseErrorForbidden(c *gin.Context, err interface{}, errorData string) {
+	ResponseBadRequest(c, 403, 54030, err, errorData)
 }
 
-func (resp *Response) ToErrorNotFoundData(c *gin.Context, err interface{}) {
-	resp.ToBadRequest(c, 404, 54040, err, nil)
+func ResponseErrorNotFoundData(c *gin.Context, err interface{}) {
+	ResponseBadRequest(c, 404, 54040, err, nil)
 }
 
-func (resp *Response) ToErrorNotFoundPage(c *gin.Context, err interface{}) {
-	resp.ToBadRequest(c, 404, 54041, err, nil)
+func ResponseErrorNotFoundPage(c *gin.Context, err interface{}) {
+	ResponseBadRequest(c, 404, 54041, err, nil)
 }
 
-func (resp *Response) ToErrorServer(c *gin.Context, err interface{}) {
-	resp.ToBadRequest(c, 500, 5400, err, nil)
+func ResponseErrorServer(c *gin.Context, err interface{}) {
+	ResponseBadRequest(c, 500, 5400, err, nil)
 }

@@ -11,48 +11,46 @@ import (
 )
 
 func AddUser(c *gin.Context) {
-	var resp utils.Response
 	var m models.User
 	if err := c.ShouldBindJSON(&m); err != nil {
-		resp.ToErrorValidatorParameter(c, err)
+		utils.ResponseErrorValidatorParameter(c, err)
 		return
 	}
 	_, err := services.AddUser(&m)
 	if err != nil {
 		logger.GetLogger().Error().Msgf("Add alarm user error %s", err.Error())
-		resp.ToErrorServer(c, err)
+		utils.ResponseErrorServer(c, err)
 		return
 	}
-	resp.ToSuccess(c, gin.H{"id": m.Id})
+	utils.ResponseSuccess(c, gin.H{"id": m.Id})
 }
 
 func GetUserPage(c *gin.Context) {
-	resp := &utils.Response{}
 	obj, isExist := c.GetQuery("pageIndex")
 	if isExist != true {
-		resp.ToErrorParameter(c, "参数pageIndex不能为空")
+		utils.ResponseErrorParameter(c, "参数pageIndex不能为空")
 		return
 	}
 	pageIndex, err := strconv.Atoi(obj)
 	if err != nil {
-		resp.ToErrorParameter(c, "参数pageIndex必须是整数")
+		utils.ResponseErrorParameter(c, "参数pageIndex必须是整数")
 		return
 	}
 	obj, isExist = c.GetQuery("pageSize")
 	if isExist != true {
-		resp.ToErrorParameter(c, "参数pageSize不能为空")
+		utils.ResponseErrorParameter(c, "参数pageSize不能为空")
 		return
 	}
 	pageSize, err := strconv.Atoi(obj)
 	if err != nil {
-		resp.ToErrorParameter(c, "参数pageSize必须是整数")
+		utils.ResponseErrorParameter(c, "参数pageSize必须是整数")
 		return
 	}
 	name := c.Query("name")
 	data, err := services.GetUserPage(pageIndex, pageSize, name)
 	if err != nil {
-		resp.ToErrorParameter(c, err.Error())
+		utils.ResponseErrorParameter(c, err.Error())
 		return
 	}
-	resp.ToSuccess(c, data)
+	utils.ResponseSuccess(c, data)
 }
