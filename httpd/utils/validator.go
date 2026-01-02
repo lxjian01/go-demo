@@ -14,8 +14,12 @@ import (
 	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
 )
 
-// 全局翻译器T
-var Trans ut.Translator
+// Trans 全局翻译器
+var trans ut.Translator
+
+func GetTranslator() ut.Translator {
+	return trans
+}
 
 func InitTrans(locale string) (err error) {
 	//修改gin框架中Validator引擎属性，实现自定制
@@ -35,18 +39,18 @@ func InitTrans(locale string) (err error) {
 		uni := ut.New(enT, zhT, enT)
 		// locale通常取决于http请求'Accept-language'
 		var ok bool
-		Trans, ok = uni.GetTranslator(locale)
+		trans, ok = uni.GetTranslator(locale)
 		if !ok {
 			return fmt.Errorf("uni.GetTranslator(%s) failed", locale)
 		}
 		// 注册翻译器
 		switch locale {
 		case "en":
-			err = enTranslations.RegisterDefaultTranslations(v, Trans)
+			err = enTranslations.RegisterDefaultTranslations(v, trans)
 		case "zh":
-			err = zhTranslations.RegisterDefaultTranslations(v, Trans)
+			err = zhTranslations.RegisterDefaultTranslations(v, trans)
 		default:
-			err = enTranslations.RegisterDefaultTranslations(v, Trans)
+			err = enTranslations.RegisterDefaultTranslations(v, trans)
 		}
 		return
 	}
