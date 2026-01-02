@@ -3,6 +3,7 @@ package postgresclient
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"go-demo/internal/config"
@@ -12,16 +13,22 @@ import (
 )
 
 var (
-	db          *gorm.DB
+	db      *gorm.DB
+	once    sync.Once
+	initErr error
+
 	sqlDBCloser func() error
 )
 
-// InitPostgres 初始化数据库（只允许调用一次）
+// InitPostgres 初始化数据库（进程级只会执行一次）
 func InitPostgres(cfg *config.PostgresConfig) error {
-	if db != nil {
-		return nil
-	}
+	once.Do(func() {
+		initErr = initPostgres(cfg)
+	})
+	return initErr
+}
 
+func initPostgres(cfg *config.PostgresConfig) error {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s TimeZone=%s",
 		cfg.Host,
@@ -34,8 +41,8 @@ func InitPostgres(cfg *config.PostgresConfig) error {
 	)
 
 	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger:      nil,
-		PrepareStmt: true, // 生产建议开启
+		Logger:      newGormLogger(cfg),
+		PrepareStmt: cfg.PrepareStmt, // 由配置控制
 	})
 	if err != nil {
 		return err
@@ -46,13 +53,13 @@ func InitPostgres(cfg *config.PostgresConfig) error {
 		return err
 	}
 
-	// === 连接池（非常关键）===
+	// === 连接池配置（生产关键）===
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
-	sqlDB.SetConnMaxIdleTime(30 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.ConnMaxIdleTime) * time.Second)
 
-	// 健康检查
+	// === 启动时健康检查（fail-fast）===
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := sqlDB.PingContext(ctx); err != nil {
@@ -64,15 +71,20 @@ func InitPostgres(cfg *config.PostgresConfig) error {
 	return nil
 }
 
-// DB 获取数据库实例
+// DB 返回 *gorm.DB（禁止在 Init 之前调用）
 func DB() *gorm.DB {
 	if db == nil {
-		panic("postgres not initialized")
+		panic("postgresclient: DB not initialized")
 	}
 	return db
 }
 
-// Close 优雅关闭
+// DBWithCtx 返回带 context 的 DB（Gin / HTTP 必用）
+func DBWithCtx(ctx context.Context) *gorm.DB {
+	return DB().WithContext(ctx)
+}
+
+// Close 优雅关闭数据库连接池
 func Close() error {
 	if sqlDBCloser != nil {
 		return sqlDBCloser()

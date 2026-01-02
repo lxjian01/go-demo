@@ -14,6 +14,24 @@ mysql:
   password: "123456"
   maxConn: 30
   maxOpen: 30
+postgres:
+  host: "localhost"
+  port: 5432
+  user: "admin"
+  password: "admin123"
+  dbname: "appdb"
+  # === 连接安全 ===
+  sslmode: "disable"        # 内网可用 require，公网建议 verify-full
+  timezone: "Asia/Shanghai" # 与应用时区一致
+  # === 连接池（生产关键）===
+  maxIdleConns: 20          # 建议 = maxOpenConns / 2
+  maxOpenConns: 40          # 建议 = CPU * 4 ~ CPU * 8
+  connMaxLifetime: 3600     # 1h，防止 server-side idle 问题
+  connMaxIdleTime: 1800     # 30m，避免空闲连接堆积
+  # === GORM 行为 ===
+  prepareStmt: true         # SQL 模板稳定时开启
+  logLevel: "warn"          # 生产默认 warn
+  slowQueryThreshold: 200   # 慢 SQL 阈值（ms）
 redis:
   host: "localhost"
   port: 6379

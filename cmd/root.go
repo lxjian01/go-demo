@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-demo/internal/config"
 	"go-demo/internal/logger"
+	"go-demo/internal/postgresclient"
 
 	"github.com/spf13/cobra"
 
@@ -38,13 +39,13 @@ var rootCmd = &cobra.Command{
 		//	panic(err)
 		//}
 		//fmt.Println("Init mysql client ok")
-		//
-		//fmt.Println("Starting init postgres client")
-		//err = postgresclient.InitPostgres(conf.Postgres)
-		//if err != nil {
-		//	panic(err)
-		//}
-		//fmt.Println("Init postgres client ok")
+
+		fmt.Println("Starting init postgres client")
+		err = postgresclient.InitPostgres(conf.Postgres)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("Init postgres client ok")
 
 		//fmt.Println("Starting init redis client")
 		//err = redisclient.InitRedis(conf.Redis)

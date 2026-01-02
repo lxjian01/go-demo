@@ -31,16 +31,22 @@ type MysqlConfig struct {
 }
 
 type PostgresConfig struct {
-	Host            string
-	Port            int
-	User            string
-	Password        string
-	DBName          string
-	SSLMode         string // disable / require / verify-full
-	TimeZone        string
+	Host     string
+	Port     int
+	User     string
+	Password string
+	DBName   string
+	SSLMode  string // disable / require / verify-full
+	TimeZone string
+	// === 连接池 ===
 	MaxIdleConns    int
 	MaxOpenConns    int
 	ConnMaxLifetime int // seconds
+	ConnMaxIdleTime int // seconds
+	// === GORM ===
+	PrepareStmt        bool
+	LogLevel           string // silent / error / warn / info
+	SlowQueryThreshold int    // ms
 }
 
 type RedisConfig struct {
