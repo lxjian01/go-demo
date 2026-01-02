@@ -26,12 +26,12 @@ func ResponseSuccess(c *gin.Context, data interface{}) {
 	c.JSON(200, gin.H{"code": 0, "message": "success", "data": data})
 }
 
-func ResponseBadRequest(c *gin.Context, httpCode int, errorCode int, err interface{}, errorData interface{}) {
+func ResponseFailure(c *gin.Context, httpCode int, errorCode int, err interface{}, errorData interface{}) {
 	errorMsg := responseGetErrorMsg(err)
 	c.JSON(httpCode, gin.H{"code": errorCode, "message": errorMsg, "data": errorData})
 }
 
-func ResponseErrorValidatorParameter(c *gin.Context, err error) {
+func ResponseFailureValidatorParameter(c *gin.Context, err error) {
 	var errorMsg string
 	errorData := make(map[string]string)
 	switch errs := err.(type) {
@@ -54,29 +54,29 @@ func ResponseErrorValidatorParameter(c *gin.Context, err error) {
 	default:
 		errorMsg = err.Error()
 	}
-	ResponseBadRequest(c, 400, 54000, errorMsg, errorData)
+	ResponseFailure(c, 400, 54000, errorMsg, errorData)
 }
 
-func ResponseErrorParameter(c *gin.Context, err interface{}) {
-	ResponseBadRequest(c, 400, 54000, err, nil)
+func ResponseFailureParameter(c *gin.Context, err interface{}) {
+	ResponseFailure(c, 400, 54000, err, nil)
 }
 
-func ResponseMsgUnauthorized(c *gin.Context, err interface{}) {
-	ResponseBadRequest(c, 401, 54010, err, nil)
+func ResponseFailureUnauthorized(c *gin.Context, err interface{}) {
+	ResponseFailure(c, 401, 54010, err, nil)
 }
 
-func ResponseErrorForbidden(c *gin.Context, err interface{}) {
-	ResponseBadRequest(c, 403, 54030, err, nil)
+func ResponseFailureForbidden(c *gin.Context, err interface{}) {
+	ResponseFailure(c, 403, 54030, err, nil)
 }
 
-func ResponseErrorNotFoundData(c *gin.Context, err interface{}) {
-	ResponseBadRequest(c, 404, 54040, err, nil)
+func ResponseFailureNotFoundData(c *gin.Context, err interface{}) {
+	ResponseFailure(c, 404, 54040, err, nil)
 }
 
-func ResponseErrorNotFoundPage(c *gin.Context, err interface{}) {
-	ResponseBadRequest(c, 404, 54041, err, nil)
+func ResponseFailureNotFoundPage(c *gin.Context, err interface{}) {
+	ResponseFailure(c, 404, 54041, err, nil)
 }
 
-func ResponseErrorServer(c *gin.Context, err interface{}) {
-	ResponseBadRequest(c, 500, 5400, err, nil)
+func ResponseFailureServer(c *gin.Context, err interface{}) {
+	ResponseFailure(c, 500, 5400, err, nil)
 }
