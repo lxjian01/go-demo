@@ -68,6 +68,40 @@ func initTranslator(locale string) (err error) {
 	return
 }
 
+// ConvertFieldToJSONTag 根据结构体类型和 Go 字段名，返回 JSON tag
+func ConvertFieldToJSONTag(structType interface{}, goField string) string {
+	t := reflect.TypeOf(structType)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if field, ok := t.FieldByName(goField); ok {
+		tag := field.Tag.Get("json")
+		if tag == "" || tag == "-" {
+			return goField
+		}
+		return strings.Split(tag, ",")[0] // 去掉 `omitempty` 等选项
+	}
+	return goField // fallback
+}
+
+// Translate 接收 validator.ValidationErrors，返回 key=字段名, value=翻译后的错误信息
+func Translate(errs validator.ValidationErrors) map[string]string {
+	if errs == nil {
+		return nil
+	}
+
+	errorData := make(map[string]string, len(errs))
+	for _, e := range errs {
+		field := e.StructField() // 结构体字段名
+		if trans != nil {
+			errorData[field] = e.Translate(trans)
+		} else {
+			errorData[field] = e.Error()
+		}
+	}
+	return RemoveStructName(errorData) // 去掉结构体前缀
+}
+
 func RemoveStructName(fields map[string]string) map[string]string {
 	result := make(map[string]string, len(fields))
 

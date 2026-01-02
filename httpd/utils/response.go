@@ -43,18 +43,19 @@ func ResponseErrorValidatorParameter(c *gin.Context, err error) {
 	case nil:
 		errorMsg = "error is nil"
 	case validator.ValidationErrors:
-		translator := myvalidator.GetTranslator()
-		errorData = myvalidator.RemoveStructName(errs.Translate(translator))
+		errorData = myvalidator.Translate(errs)
 		for _, v := range errorData {
 			if errorMsg == "" {
 				errorMsg = v
 			} else {
-				errorMsg = fmt.Sprintf("%s: %s", errorMsg, v)
+				errorMsg = errorMsg + "; " + v
 			}
 		}
 	case *json.UnmarshalTypeError:
-		errorData[errs.Field] = fmt.Sprintf("类型错误: 期望类型 %s", errs.Type.String())
-		errorMsg = fmt.Sprintf("%s 类型错误，期望类型 %s", errs.Field, errs.Type.String())
+		// errs.Field 是 Go 结构体字段名
+		jsonField := myvalidator.ConvertFieldToJSONTag(errs.Struct, errs.Field)
+		errorData[jsonField] = fmt.Sprintf("类型错误: 期望类型 %s", errs.Type.String())
+		errorMsg = fmt.Sprintf("%s 类型错误，期望类型 %s", jsonField, errs.Type.String())
 	default:
 		errorMsg = err.Error()
 	}
