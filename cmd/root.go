@@ -5,6 +5,7 @@ import (
 	"go-demo/internal/config"
 	"go-demo/internal/logger"
 	"go-demo/internal/postgresclient"
+	"go-demo/internal/validator"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -41,6 +42,13 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		logger.GetLogger().Info().Msg("postgres initialized")
+
+		// === Init validator translator ===
+		if err := validator.InitTrans("en"); err != nil {
+			logger.GetLogger().Fatal().Err(err).Msg("init validator translator failed")
+			return err
+		}
+		logger.GetLogger().Info().Msg("validator translator initialized")
 
 		// === Start HTTP Server（阻塞，内部优雅关闭）===
 		httpd.StartHttpServer(conf.Httpd)

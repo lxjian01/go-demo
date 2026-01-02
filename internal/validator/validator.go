@@ -1,9 +1,10 @@
-package utils
+package validator
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/locales/en"
@@ -14,14 +15,24 @@ import (
 	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
 )
 
-// Trans 全局翻译器
-var trans ut.Translator
+var (
+	trans ut.Translator
+	once  sync.Once
+)
 
 func GetTranslator() ut.Translator {
 	return trans
 }
 
-func InitTrans(locale string) (err error) {
+func InitTrans(locale string) error {
+	var initErr error
+	once.Do(func() {
+		initErr = initTranslator(locale)
+	})
+	return initErr
+}
+
+func initTranslator(locale string) (err error) {
 	//修改gin框架中Validator引擎属性，实现自定制
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		// 注册一个获取json tag的自定义方法
@@ -58,10 +69,14 @@ func InitTrans(locale string) (err error) {
 }
 
 func RemoveStructName(fields map[string]string) map[string]string {
-	result := map[string]string{}
+	result := make(map[string]string, len(fields))
 
 	for field, err := range fields {
-		result[field[strings.Index(field, ".")+1:]] = err
+		if idx := strings.Index(field, "."); idx != -1 {
+			result[field[idx+1:]] = err
+		} else {
+			result[field] = err
+		}
 	}
 	return result
 }

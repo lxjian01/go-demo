@@ -3,27 +3,13 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	myvalidator "go-demo/internal/validator"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type Response struct{}
-
-func (resp *Response) ToSuccess(c *gin.Context, data interface{}) {
-	if data == nil {
-		c.JSON(200, gin.H{})
-	} else {
-		c.JSON(200, data)
-	}
-}
-
-func (resp *Response) ToBadRequest(c *gin.Context, httpCode int, errorCode int, err interface{}, errorData interface{}) {
-	errorMsg := resp.getErrorMsg(err)
-	c.Set(errorMsg, errorMsg)
-	data := gin.H{"errorCode": errorCode, "errorMsg": errorMsg, "errorData": errorData}
-	c.JSON(httpCode, data)
-}
 
 func (resp *Response) getErrorMsg(err interface{}) string {
 	errorMsg := ""
@@ -38,6 +24,20 @@ func (resp *Response) getErrorMsg(err interface{}) string {
 	return errorMsg
 }
 
+func (resp *Response) ToSuccess(c *gin.Context, data interface{}) {
+	if data == nil {
+		c.JSON(200, gin.H{})
+	} else {
+		c.JSON(200, data)
+	}
+}
+
+func (resp *Response) ToBadRequest(c *gin.Context, httpCode int, errorCode int, err interface{}, errorData interface{}) {
+	errorMsg := resp.getErrorMsg(err)
+	data := gin.H{"errorCode": errorCode, "errorMsg": errorMsg, "errorData": errorData}
+	c.JSON(httpCode, data)
+}
+
 func (resp *Response) ToErrorValidatorParameter(c *gin.Context, err error) {
 	var errorMsg string
 	errorData := make(map[string]string)
@@ -45,8 +45,8 @@ func (resp *Response) ToErrorValidatorParameter(c *gin.Context, err error) {
 	case nil:
 		errorMsg = "error is nil"
 	case validator.ValidationErrors:
-		translator := GetTranslator()
-		errorData = RemoveStructName(errs.Translate(translator))
+		translator := myvalidator.GetTranslator()
+		errorData = myvalidator.RemoveStructName(errs.Translate(translator))
 		for _, v := range errorData {
 			if errorMsg == "" {
 				errorMsg = v
