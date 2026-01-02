@@ -5,80 +5,58 @@ import (
 	"go-demo/internal/config"
 	"go-demo/internal/logger"
 	"go-demo/internal/postgresclient"
+	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 
-	"github.com/spf13/viper"
-
 	"go-demo/httpd"
-	"os"
-	"path/filepath"
 )
 
-// 定义根命令
 var rootCmd = &cobra.Command{
-	Use: "go-demo",
-	Run: func(cmd *cobra.Command, args []string) {
+	Use:   "go-demo",
+	Short: "go-demo http service",
+	RunE: func(cmd *cobra.Command, args []string) error {
 		conf := config.GetAppConfig()
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Println(r)
-				os.Exit(1)
-			}
-		}()
-		fmt.Println("Starting init logger")
-		err := logger.InitLogger(conf.Logger)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("Init logger ok")
 
-		fmt.Println("Starting init postgres client")
-		err = postgresclient.InitPostgres(conf.Postgres)
-		if err != nil {
-			panic(err)
+		// === Gin mode（必须最早）===
+		switch conf.Env {
+		case "prod":
+			gin.SetMode(gin.ReleaseMode)
+		case "test":
+			gin.SetMode(gin.TestMode)
+		default:
+			gin.SetMode(gin.DebugMode)
 		}
-		fmt.Println("Init postgres client ok")
 
-		// init gin server
-		logger.GetLogger().Info().Msg("Starting init gin server")
+		// === Init Logger ===
+		if err := logger.InitLogger(conf.Logger); err != nil {
+			return err
+		}
+		logger.GetLogger().Info().Str("env", conf.Env).Msg("logger initialized")
+
+		// === Init Postgres ===
+		if err := postgresclient.InitPostgres(conf.Postgres); err != nil {
+			logger.GetLogger().Fatal().Err(err).Msg("postgres init failed")
+			return err
+		}
+		logger.GetLogger().Info().Msg("postgres initialized")
+
+		// === Start HTTP Server（阻塞，内部优雅关闭）===
 		httpd.StartHttpServer(conf.Httpd)
+
+		return nil
 	},
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 func init() {
 	// 初始化配置文件转化成对应的结构体
 	cobra.OnInitialize(initConfig)
-}
-
-// Execute 启动调用的入口方法
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println("Execute error by ", err)
-		os.Exit(1)
-	}
-}
-
-// initConfig 通过viper初始化配置文件到结构体
-func initConfig() {
-	dir, _ := os.Getwd()
-	env := os.Getenv("ENV")
-	if env == "" {
-		env = "dev"
-	}
-	configPath := filepath.Join(dir, "configs/"+env)
-	// 设置读取的文件路径
-	viper.AddConfigPath(configPath)
-	// 设置读取的文件名
-	viper.SetConfigName("config")
-	// 设置文件的类型
-	viper.SetConfigType("yaml")
-	if err := viper.ReadInConfig(); err != nil {
-		panic(fmt.Sprintf("Read config error by %v \n", err))
-	}
-	var appConf config.AppConfig
-	if err := viper.Unmarshal(&appConf); err != nil {
-		panic(fmt.Sprintf("Unmarshal config error by %v \n", err))
-	}
-	config.SetAppConfig(&appConf)
 }
