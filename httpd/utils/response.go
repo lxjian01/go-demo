@@ -23,17 +23,12 @@ func responseGetErrorMsg(err interface{}) string {
 }
 
 func ResponseSuccess(c *gin.Context, data interface{}) {
-	if data == nil {
-		c.JSON(200, gin.H{})
-	} else {
-		c.JSON(200, data)
-	}
+	c.JSON(200, gin.H{"code": 0, "message": "success", "data": data})
 }
 
 func ResponseBadRequest(c *gin.Context, httpCode int, errorCode int, err interface{}, errorData interface{}) {
 	errorMsg := responseGetErrorMsg(err)
-	data := gin.H{"errorCode": errorCode, "errorMsg": errorMsg, "errorData": errorData}
-	c.JSON(httpCode, data)
+	c.JSON(httpCode, gin.H{"code": errorCode, "message": errorMsg, "data": errorData})
 }
 
 func ResponseErrorValidatorParameter(c *gin.Context, err error) {
@@ -66,12 +61,12 @@ func ResponseErrorParameter(c *gin.Context, err interface{}) {
 	ResponseBadRequest(c, 400, 54000, err, nil)
 }
 
-func ResponseMsgUnauthorized(c *gin.Context, err interface{}, errorData string) {
-	ResponseBadRequest(c, 401, 54010, err, errorData)
+func ResponseMsgUnauthorized(c *gin.Context, err interface{}) {
+	ResponseBadRequest(c, 401, 54010, err, nil)
 }
 
-func ResponseErrorForbidden(c *gin.Context, err interface{}, errorData string) {
-	ResponseBadRequest(c, 403, 54030, err, errorData)
+func ResponseErrorForbidden(c *gin.Context, err interface{}) {
+	ResponseBadRequest(c, 403, 54030, err, nil)
 }
 
 func ResponseErrorNotFoundData(c *gin.Context, err interface{}) {
