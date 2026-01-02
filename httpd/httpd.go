@@ -1,41 +1,86 @@
 package httpd
 
 import (
-	"go-demo/httpd/routers"
+	"context"
+	"errors"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"go-demo/internal/logger"
-
 	"go-demo/httpd/middlewares"
+	"go-demo/httpd/routers"
 	"go-demo/internal/config"
+	"go-demo/internal/logger"
+	"go-demo/internal/postgresclient"
 )
 
 func StartHttpServer(c *config.HttpdConfig) {
-	router := gin.Default()
-	// 添加自定义的 logger 间件
-	router.Use(middlewares.LoggerMiddleware(), gin.Recovery())
-	router.Use(middlewares.AuthMiddleware(), gin.Recovery())
-	// Define a simple GET endpoint
-	router.GET("/ping", func(c *gin.Context) {
-		// Return JSON response
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-		logger.GetLogger().Info().Str("Start HTTP server at %s", "111")
+	router := gin.New()
+	router.Use(
+		gin.Recovery(),
+		middlewares.LoggerMiddleware(),
+		middlewares.AuthMiddleware(),
+	)
+
+	// === K8s probes ===
+	router.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	// 添加路由
-	routers.UserRoutes(router) //Added alarm routers
-	// 拼接host
-	Host := c.Host
-	Port := strconv.Itoa(c.Port)
-	addr := net.JoinHostPort(Host, Port)
-	logger.GetLogger().Info().Str("server", addr).Msg("Start HTTP server")
-	err := router.Run(addr)
-	if err != nil {
-		logger.GetLogger().Error().AnErr("Start HTTP server error by %v", err)
+
+	router.GET("/readyz", func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+		defer cancel()
+
+		if err := postgresclient.HealthCheck(ctx); err != nil {
+			logger.GetLogger().Error().Err(err).Msg("postgres not ready")
+			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "db not ready"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"status": "ready"})
+	})
+
+	routers.UserRoutes(router)
+
+	addr := net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+	server := &http.Server{
+		Addr:    addr,
+		Handler: router,
+	}
+
+	// === 启动 HTTP Server ===
+	go func() {
+		logger.GetLogger().Info().Str("addr", addr).Msg("http server started")
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.GetLogger().Fatal().Err(err).Msg("http server start failed")
+		}
+	}()
+
+	// === 等待退出信号 ===
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-quit
+	logger.GetLogger().Info().Str("signal", sig.String()).Msg("shutdown signal received")
+
+	// === 优雅关闭 HTTP ===
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		logger.GetLogger().Error().Err(err).Msg("http server shutdown error")
+	} else {
+		logger.GetLogger().Info().Msg("http server shutdown complete")
+	}
+
+	// === 关闭 PostgreSQL ===
+	if err := postgresclient.Close(); err != nil {
+		logger.GetLogger().Error().Err(err).Msg("postgres close error")
+	} else {
+		logger.GetLogger().Info().Msg("postgres closed")
 	}
 }

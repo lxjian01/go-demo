@@ -74,7 +74,7 @@ func initPostgres(cfg *config.PostgresConfig) error {
 // DB 返回 *gorm.DB（禁止在 Init 之前调用）
 func DB() *gorm.DB {
 	if db == nil {
-		panic("postgresclient: DB not initialized")
+		panic("postgres client: DB not initialized")
 	}
 	return db
 }
