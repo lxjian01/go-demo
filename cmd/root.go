@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"go-demo/internal/config"
 	"go-demo/internal/logger"
-	"go-demo/internal/mysqlclient"
-	"go-demo/internal/redisclient"
 
 	"github.com/spf13/cobra"
 
@@ -34,19 +32,26 @@ var rootCmd = &cobra.Command{
 		}
 		fmt.Println("Init logger ok")
 
-		fmt.Println("Starting init mysql client")
-		err = mysqlclient.InitMysql(conf.Mysql)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("Init mysql client ok")
+		//fmt.Println("Starting init mysql client")
+		//err = mysqlclient.InitMysql(conf.Mysql)
+		//if err != nil {
+		//	panic(err)
+		//}
+		//fmt.Println("Init mysql client ok")
+		//
+		//fmt.Println("Starting init postgres client")
+		//err = postgresclient.InitPostgres(conf.Postgres)
+		//if err != nil {
+		//	panic(err)
+		//}
+		//fmt.Println("Init postgres client ok")
 
-		fmt.Println("Starting init redis client")
-		err = redisclient.InitRedis(conf.Redis)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("Init redis client ok")
+		//fmt.Println("Starting init redis client")
+		//err = redisclient.InitRedis(conf.Redis)
+		//if err != nil {
+		//	panic(err)
+		//}
+		//fmt.Println("Init redis client ok")
 
 		// init gin server
 		logger.GetLogger().Info().Msg("Starting init gin server")

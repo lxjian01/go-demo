@@ -1,12 +1,13 @@
 package config
 
 type AppConfig struct {
-	Version string        `yaml:"version"`
-	Env     string        `yaml:"env"`
-	Logger  *LoggerConfig `yaml:"logger"`
-	Httpd   *HttpdConfig  `yaml:"httpd"`
-	Mysql   *MysqlConfig  `yaml:"mysql"`
-	Redis   *RedisConfig  `yaml:"redisclient"`
+	Version  string          `yaml:"version"`
+	Env      string          `yaml:"env"`
+	Logger   *LoggerConfig   `yaml:"logger"`
+	Httpd    *HttpdConfig    `yaml:"httpd"`
+	Mysql    *MysqlConfig    `yaml:"mysql"`
+	Postgres *PostgresConfig `yaml:"postgres"`
+	Redis    *RedisConfig    `yaml:"redisclient"`
 }
 
 type HttpdConfig struct {
@@ -27,6 +28,19 @@ type MysqlConfig struct {
 	Password string
 	MaxConn  int
 	MaxOpen  int
+}
+
+type PostgresConfig struct {
+	Host            string
+	Port            int
+	User            string
+	Password        string
+	DBName          string
+	SSLMode         string // disable / require / verify-full
+	TimeZone        string
+	MaxIdleConns    int
+	MaxOpenConns    int
+	ConnMaxLifetime int // seconds
 }
 
 type RedisConfig struct {
