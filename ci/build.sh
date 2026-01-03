@@ -54,8 +54,7 @@ docker run --rm \
         -X main.GitBranch=${GIT_BRANCH} \
         -X main.GitCommit=${GIT_COMMIT} \
         -X main.BuildTime=${BUILD_TIME}\" \
-      -o ci/dist/${BIN_NAME} \
-      ./cmd/server
+      -o ci/dist/${BIN_NAME}
   "
 
 chmod +x "${OUTPUT_DIR}/${BIN_NAME}"
