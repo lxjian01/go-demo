@@ -7,13 +7,15 @@ import (
 )
 
 func TestInit(t *testing.T) {
+	tmpDir := t.TempDir() // 自动创建 & 测试结束自动删除
+
 	logConfig := &config.LoggerConfig{
-		Dir:   "/Users/lj/logs/go-demo",
+		Dir:   tmpDir,
 		Level: "Info",
 	}
 
 	err := logger.InitLogger(logConfig)
 	if err != nil {
-		t.Errorf("init logger failed: %v", err)
+		t.Fatalf("init logger failed: %v", err)
 	}
 }

@@ -42,11 +42,10 @@ func InitLogger(c *config.LoggerConfig) error {
 // 获取日志文件路径，按日期分割
 func getLogFilePath(logDir string) (string, error) {
 	date := time.Now().Format("2006-01-02")
-	_, err := os.Stat(logDir)
-	if err != nil {
-		return "", fmt.Errorf("os stat log dir err %w", err)
+	if logDir == "" {
+		return "", fmt.Errorf("log dir is empty")
 	}
-	err = os.MkdirAll(logDir, os.ModePerm)
+	err := os.MkdirAll(logDir, 0755)
 	if err != nil {
 		return "", fmt.Errorf("mkdir all log dir err %w", err)
 	}
