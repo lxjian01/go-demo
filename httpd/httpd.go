@@ -3,6 +3,7 @@ package httpd
 import (
 	"context"
 	"errors"
+	"go-demo/internal/redisclient"
 	"net"
 	"net/http"
 	"os"
@@ -82,5 +83,12 @@ func StartHttpServer(c *config.HttpdConfig) {
 		logger.GetLogger().Error().Err(err).Msg("postgres close error")
 	} else {
 		logger.GetLogger().Info().Msg("postgres closed")
+	}
+
+	// === 关闭 PostgreSQL ===
+	if err := redisclient.Close(); err != nil {
+		logger.GetLogger().Error().Err(err).Msg("redis close error")
+	} else {
+		logger.GetLogger().Info().Msg("redis closed")
 	}
 }

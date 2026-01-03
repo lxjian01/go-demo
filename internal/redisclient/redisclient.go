@@ -5,31 +5,50 @@ import (
 	"fmt"
 	"go-demo/internal/config"
 	"sync"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 var (
-	Rdb  *redis.Client
+	rdb  *redis.Client
 	once sync.Once
 )
 
-// InitRedis 初始化 Redis 客户端
-func InitRedis(conf *config.RedisConfig) error {
-	var err error
+// InitRedis 初始化 Redis 客户端，返回 error
+func InitRedis(cfg *config.RedisConfig) error {
+	var initErr error
 	once.Do(func() {
-		// 创建 Redis 客户端
-		Rdb = redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("%s:%d", conf.Host, conf.Port), // Redis 地址
-			Password: conf.Password,                              // Redis 密码
-			DB:       conf.DB,                                    // Redis 默认数据库
+		rdb = redis.NewClient(&redis.Options{
+			Addr:         cfg.Addr,
+			Password:     cfg.Password,
+			DB:           cfg.DB,
+			PoolSize:     cfg.PoolSize,
+			MinIdleConns: cfg.MinIdleConns,
+			DialTimeout:  cfg.DialTimeout,
+			ReadTimeout:  cfg.ReadTimeout,
+			WriteTimeout: cfg.WriteTimeout,
 		})
 
-		// 测试 Redis 连接
-		_, err = Rdb.Ping(context.Background()).Result()
-		if err != nil {
-			return
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := rdb.Ping(ctx).Err(); err != nil {
+			initErr = fmt.Errorf("redis connect failed: %w", err)
+			rdb = nil
 		}
 	})
-	return err
+	return initErr
+}
+
+// Close 优雅关闭
+func Close() error {
+	if rdb != nil {
+		return rdb.Close()
+	}
+	return nil
+}
+
+// GetClient 获取全局 Redis 实例
+func GetClient() *redis.Client {
+	return rdb
 }

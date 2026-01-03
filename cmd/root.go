@@ -5,6 +5,7 @@ import (
 	"go-demo/internal/config"
 	"go-demo/internal/logger"
 	"go-demo/internal/postgresclient"
+	"go-demo/internal/redisclient"
 	"go-demo/internal/validator"
 	"os"
 
@@ -42,6 +43,14 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		logger.GetLogger().Info().Msg("postgres initialized")
+
+		// === Init Redis ===
+		err := redisclient.InitRedis(conf.Redis)
+		if err != nil {
+			logger.GetLogger().Fatal().Err(err).Msg("redis init failed")
+			return err
+		}
+		logger.GetLogger().Info().Msg("redis initialized")
 
 		// === Init validator translator ===
 		if err := validator.InitTrans("en"); err != nil {

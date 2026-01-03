@@ -35,9 +35,9 @@ func initPostgres(cfg *config.PostgresConfig) error {
 		cfg.Port,
 		cfg.User,
 		cfg.Password,
-		cfg.DBName,
+		cfg.DB,
 		cfg.SSLMode,
-		cfg.TimeZone,
+		cfg.Timezone,
 	)
 
 	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -73,9 +73,6 @@ func initPostgres(cfg *config.PostgresConfig) error {
 
 // DB 返回 *gorm.DB（禁止在 Init 之前调用）
 func DB() *gorm.DB {
-	if db == nil {
-		panic("postgres client: DB not initialized")
-	}
 	return db
 }
 

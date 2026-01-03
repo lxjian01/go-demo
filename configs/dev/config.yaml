@@ -5,36 +5,29 @@ httpd:
   port: 8010
 logger:
   dir: "/Users/lj/logs/go-demo"
-  Level: "INFO"
-mysql:
-  host: "localhost"
-  port: 3306
-  dbName: "go-demo"
-  user: "root"
-  password: "123456"
-  maxConn: 30
-  maxOpen: 30
+  level: "INFO"
 postgres:
   host: "localhost"
   port: 5432
   user: "admin"
   password: "admin123"
-  dbname: "appdb"
-  # === 连接安全 ===
-  sslmode: "disable"        # 内网可用 require，公网建议 verify-full
-  timezone: "Asia/Shanghai" # 与应用时区一致
-  # === 连接池（生产关键）===
-  maxIdleConns: 20          # 建议 = maxOpenConns / 2
-  maxOpenConns: 40          # 建议 = CPU * 4 ~ CPU * 8
-  connMaxLifetime: 3600     # 1h，防止 server-side idle 问题
-  connMaxIdleTime: 1800     # 30m，避免空闲连接堆积
-  # === GORM 行为 ===
-  prepareStmt: true         # SQL 模板稳定时开启
-  logLevel: "warn"          # 生产默认 warn
-  slowQueryThreshold: 200   # 慢 SQL 阈值（ms）
+  db: "appdb"
+  ssl_mode: "disable"
+  timezone: "Asia/Shanghai"
+  max_idle_conns: 20
+  max_open_conns: 40
+  conn_max_lifetime: 3600
+  conn_max_idle_time: 1800
+  prepare_stmt: true
+  logLevel: "warn"
+  slow_query_threshold: 200
 redis:
-  host: "localhost"
-  port: 6379
-  Password: ""
+  addr: "127.0.0.1:6379"
+  password: ""
   db: 0
+  pool_size: 10
+  min_idle_conns: 2
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
   

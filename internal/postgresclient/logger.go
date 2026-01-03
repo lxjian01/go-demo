@@ -22,7 +22,7 @@ func newGormLogger(cfg *config.PostgresConfig) logger.Interface {
 
 	return &gormZerologger{
 		logLevel:      level,
-		slowThreshold: time.Duration(cfg.SlowQueryThreshold) * time.Millisecond,
+		slowThreshold: time.Duration(cfg.SlowQueryThresholdMS) * time.Millisecond,
 	}
 }
 
